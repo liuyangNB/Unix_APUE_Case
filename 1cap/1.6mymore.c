@@ -4,12 +4,14 @@
 #define LINELEN 512
 
 void do_more(FILE* fp);
-int see_more();
+int see_more(FILE* cmd);
 
 
 /*
  *主要还是业务逻辑：	当只有more就针对stdin进行more
  			当后面跟随了多个文件，就分别对其more
+---------------------------------------------------------------
+第二版，修复第一版more一直跟随显示的问题和管道操作下see_more不等待键盘的操作
  *
  * */
 int main(int ac, char* av[]){
@@ -45,10 +47,12 @@ int main(int ac, char* av[]){
  	char line[LINELEN];//define a arr to store line
 	int num_of_lines = 0;
 	int see_more(),reply;
+	FILE* fp_tty = fopen("/dev/tty","r");
+	if(fp_tty == NULL) exit(1);
 	while(fgets(line,LINELEN,fp)){
 		//出口，读完规定的行数
 		if(num_of_lines == PAGELEN){
-			reply = see_more();//等待下一步操作,再看几行
+			reply = see_more(fp_tty);//等待下一步操作,再看几行
 			if(reply == 0){
 				break;
 			}
@@ -67,14 +71,14 @@ int main(int ac, char* av[]){
  }
 
 
-int see_more(){
+int see_more(FILE* cmd){
 	/*
 	 *等待一些用户的操作
 	 * */
 	int c;
 	printf("\033[7m more? \033[m");
 
-	while((c = getchar()) != EOF){
+	while((c = getc(cmd)) != EOF){
 		if(c == 'q') return 0;
 		if(c == ' ') return PAGELEN;//如果是空格，那就是下一页，也会是重新看PAGELEN行
 		if(c == '\n') return 1;
