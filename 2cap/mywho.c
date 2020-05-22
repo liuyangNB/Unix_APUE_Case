@@ -7,8 +7,10 @@
 #include <fcntl.h>	//open
 #include <unistd.h>	//close read
 #include <stdlib.h>
+#include <time.h>
 #define SHOWHOST	//???
 
+void show_time(time_t);
 void show_info(struct utmp* recode);
 
 int main(){
@@ -29,6 +31,12 @@ int main(){
 
 
 void show_info(struct utmp* recode){
+
+	if(recode->ut_type != USER_PROCESS){
+		return;//没有进程的 也就算没有登陆的取出
+	}
+
+
 	printf("name: %-8.8s", recode->ut_name);
 	printf(" ");
 
@@ -38,10 +46,20 @@ void show_info(struct utmp* recode){
 	printf("processid: %-8.8s",recode->ut_id);
 	printf(" ");
 
+	show_time(recode->ut_time);
+
 #ifdef SHOWHOST
 	printf("(%s)",recode->ut_host);
 #endif
 	printf("\n");
 	
 
+}
+
+
+
+void show_time(time_t timval){
+	char* cp;
+	cp = ctime(&timval);
+	printf("%s",cp);
 }
